@@ -6,38 +6,37 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SwipeListView } from "react-native-swipe-list-view";
 import { useIsFocused } from "@react-navigation/native";
 
-
 const storeData = async (value) => {
-    try {
-        const jsonValue = JSON.stringify(value);
-        await AsyncStorage.setItem("@task_items", jsonValue);
-    } catch (e) {
-        console.error("Error storing data", e);
-    }
+  try {
+    const jsonValue = JSON.stringify(value);
+    await AsyncStorage.setItem("@task_items", jsonValue);
+  } catch (e) {
+    console.error("Error storing data", e);
+  }
 };
+
 const loadData = async () => {
-    try {
-        const jsonValue = await AsyncStorage.getItem("@task_items");
-        return jsonValue != null ? JSON.parse(jsonValue) : [];
-    } catch (e) {
-        console.error("Error loading data", e);
-        return [];
-    }
+  try {
+    const jsonValue = await AsyncStorage.getItem("@task_items");
+    return jsonValue != null ? JSON.parse(jsonValue) : [];
+  } catch (e) {
+    console.error("Error loading data", e);
+    return [];
+  }
 };
 
 export default function HomeScreen({ navigation, route }) {
 
-    const isFocused = useIsFocused(); // Add this Hook
+    const isFocused = useIsFocused();
 
-    useEffect(() => {
-      if (isFocused) { // Add this if condition
-        (async () => {
-          const loadedData = await loadData();
-          setTaskItems(loadedData);
-        })();
-      }
-    }, [isFocused]); // add isFocused in dependency array
-  
+  useEffect(() => {
+    if (isFocused) {
+      (async () => {
+        const loadedData = await loadData();
+        setTaskItems(loadedData);
+      })();
+    }
+  }, [isFocused]);
 
     useEffect(() => {
         (async () => {
@@ -62,17 +61,18 @@ export default function HomeScreen({ navigation, route }) {
     useEffect(() => {
       if (taskItems) {
         // Apply the filtering according to filterType
-        const filtered = taskItems.filter((task) => {
-          if (filterType === "highPriority") return task.priority === "5";
-          if (filterType === "lowPriority") return task.priority === "1";
+        const filtered = taskItems?.filter((task) => {
+          if (filterType === "highPriority") return task.priority === "High";
+          if (filterType === "lowPriority") return task.priority === "low";
           if (filterType === "shortTasks") return task.timeSpent < 60;
           if (filterType === "longTasks") return task.timeSpent >= 60;
           return true;
         });
-    
+        
         setFilteredTasks(filtered);
       }
     }, [taskItems, filterType]);
+    
     
     useEffect(() => {
       // Apply the sorting according to sortPriority
@@ -97,66 +97,108 @@ export default function HomeScreen({ navigation, route }) {
 
   
 
-    const Task = ({ text, completed, onPress, priority, timeSpent }) => (
-      <TouchableOpacity style={[styles.item, completed && styles.completedItem]} onPress={onPress} activeOpacity={0.99}>
-          <Text style={[styles.square, completed && styles.completedSquare]}>{completed && <FontAwesome name="check" size={18} color="#FFF" />}</Text>
-          <View style={styles.itemDetails}>
-              <Text style={[styles.itemText, completed && styles.completedText]}>{text}</Text>
-              <Text style={[styles.itemSubText, completed && styles.completedText]}>
-                  Priority: {priority}, Time Spent: {timeSpent} mins
-              </Text>
-          </View>
-      </TouchableOpacity>
+  const Task = ({ text, completed, onPress, priority, timeSpent }) => (
+    <TouchableOpacity style={[styles.item, completed && styles.completedItem]} onPress={onPress} activeOpacity={0.99}>
+      <Text style={[styles.square, completed && styles.completedSquare]}>{completed && <FontAwesome name="check" size={18} color="#FFF" />}</Text>
+      <View style={styles.itemDetails}>
+        <Text style={[styles.itemText, completed && styles.completedText]}>{text}</Text>
+        {timeSpent !== null && <Text style={[styles.itemSubText, completed && styles.completedText]}>Time Spent: {timeSpent} mins</Text>}
+        {priority !== null && <Text style={[styles.itemSubText, completed && styles.completedText]}>Priority: {priority}</Text>}
+      </View>
+    </TouchableOpacity>
   );
 
     const [taskItems, setTaskItems] = useState([]);
-
-    const handleAddTask = (task, priority, timeSpent) => {
-        const newTaskItems = [
-          ...taskItems,
-          { text: task, completed: false, priority: priority, timeSpent: timeSpent },
-        ];
-        setTaskItems(newTaskItems);
-        storeData(newTaskItems);
     
-        // Move the filtering and sorting logic to handleAddTask
+
+    const handleAddTask = async (task, priority, timeSpent) => {
+      // Set timeSpent to null if it is not provided
+      if (!timeSpent) {
+        timeSpent = null;
+      }
+      
+      const newTaskItems = [
+        ...taskItems,
+        { text: task, completed: false, priority: priority, timeSpent: timeSpent },
+      ];
+      
+      try {
+        // Store the updated task items in AsyncStorage
+        await AsyncStorage.setItem("@task_items", JSON.stringify(newTaskItems));
+        
+        // Update the state with the new task items
+        setTaskItems(newTaskItems);
+        
+        // Apply the filtering and sorting logic immediately
         const filtered = newTaskItems.filter((task) => {
-          if (filterType === "highPriority") return task.priority === "5";
-          if (filterType === "lowPriority") return task.priority === "1";
+          if (filterType === "highPriority") return task.priority === "High";
+          if (filterType === "lowPriority") return task.priority === "low";
           if (filterType === "shortTasks") return task.timeSpent < 60;
           if (filterType === "longTasks") return task.timeSpent >= 60;
           return true;
         });
     
+        const sort = (a, b) => (a.priority === b.priority ? 0 : a.priority === "High" ? -1 : 1);
+        const sorted = sortPriority ? filtered?.sort(sort) : filtered;
+    
         setFilteredTasks(filtered);
+        setSortedTasks(sorted);
+      } catch (e) {
+        console.error("Error storing data", e);
+      }
+    };
+
     
-        const sort = (a, b) =>
-          a.priority === b.priority ? 0 : a.priority === "High" ? -1 : 1;
-    
-        if (sortPriority) {
-          setSortedTasks(filtered.sort(sort));
-        } else {
-          setSortedTasks(filtered);
-        }
-      };
     const completeTask = (index) => {
-        const itemsCopy = [...taskItems];
+      setTaskItems((prevItems) => {
+        const itemsCopy = [...prevItems];
         itemsCopy[index].completed = !itemsCopy[index].completed;
-        setTaskItems(itemsCopy);
         storeData(itemsCopy);
+        return itemsCopy;
+      });
     };
     const deleteTask = (index) => {
-        const itemsCopy = [...taskItems];
-        itemsCopy.splice(index, 1);
-        setTaskItems(itemsCopy);
-        storeData(itemsCopy);
+      const itemsCopy = [...taskItems];
+      itemsCopy.splice(index, 1);
+      setTaskItems(itemsCopy);
+      storeData(itemsCopy);
     };
+
+    // Update filteredTasks and sortedTasks whenever taskItems changes
+useEffect(() => {
+  const filtered = taskItems?.filter((task) => {
+    if (filterType === "highPriority") return task.priority === "High";
+    if (filterType === "lowPriority") return task.priority === "low";
+    if (filterType === "shortTasks") return task.timeSpent < 60;
+    if (filterType === "longTasks") return task.timeSpent >= 60;
+    return true;
+  });
+
+  const sort = (a, b) => (a.priority === b.priority ? 0 : a.priority === "High" ? -1 : 1);
+  const sorted = sortPriority ? filtered?.sort(sort) : filtered;
+
+  setFilteredTasks(filtered);
+  setSortedTasks(sorted);
+}, [taskItems, filterType, sortPriority]);
+
+    
 
     return (
         <View style={styles.container}>
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
         <View style={styles.tasksWrapper}>
           <Animated.Text style={[styles.titleText, { opacity: fadeAnim }]}>Today's tasks</Animated.Text>
+          <View
+  style={{flex: 1,
+  justifyContent: 'center',
+  alignItems: 'center',
+  marginBottom: 10,
+  marginLeft: 5,
+  alignSelf: 'stretch',
+  borderWidth: 2,
+  borderColor:'#89c7ff',
+  borderRadius: 10
+}}>
           <Picker
         selectedValue={filterType}
         style={[styles.picker, styles.pickerBorder]}
@@ -169,10 +211,14 @@ export default function HomeScreen({ navigation, route }) {
                         <Picker.Item label="Shorter than 1 hour" value="shortTasks" />
                         <Picker.Item label="1 hour or longer" value="longTasks" />
                     </Picker>
+                    </View>
                     <TouchableOpacity onPress={() => setSortPriority(!sortPriority)}>
-            <Animated.Text style={[styles.sortText, { opacity: fadeAnim }]}>
-              Sort by Priority: {sortPriority ? 'Enabled' : 'Disabled'}
-            </Animated.Text>
+                    <Animated.Text style={[styles.sortText, { opacity: fadeAnim }]}>
+  <View style={styles.sortTextView}>
+    <Text style={styles.sortLabel}>Sort by Priority:</Text>
+    <Text style={styles.sortValue}>{sortPriority ? 'Enabled' : 'Disabled'}</Text>
+  </View>
+</Animated.Text>
           </TouchableOpacity>
 
           <SwipeListView
@@ -187,12 +233,13 @@ export default function HomeScreen({ navigation, route }) {
                                 </TouchableOpacity>
                             </View>
                         )}
+                        keyExtractor={(item, index) => index.toString()} // Add this line
+                        useNativeDriver={false} // Add this line
                         rightOpenValue={-80}
                         disableRightSwipe
                         previewRowKey={"0"}
                         previewOpenValue={-40}
                         previewOpenDelay={3000}
-                        keyExtractor={(item, index) => index.toString()}
                     />
                 </View>
                 </ScrollView>
@@ -213,7 +260,7 @@ export default function HomeScreen({ navigation, route }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#141414',
+        backgroundColor: '#2c2c2c',
       },
       tasksWrapper: {
         paddingTop: 80,
@@ -222,14 +269,14 @@ const styles = StyleSheet.create({
       titleText: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#0AE2FF',
+        color: '#89c7ff',
         marginBottom: 10,
         fontFamily: "Orbitron",
       },
     item: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#2c2c2c",
+        backgroundColor: "#141414",
         borderRadius: 10,
         padding: 15,
         marginBottom: 10,
@@ -277,7 +324,7 @@ const styles = StyleSheet.create({
         width: 60,
         height: 60,
         borderRadius: 60,
-        backgroundColor: "#0AE2FF",
+        backgroundColor: "#89c7ff",
         justifyContent: "center",
         alignItems: "center",
         elevation: 7,
@@ -315,17 +362,42 @@ const styles = StyleSheet.create({
         alignItems: 'center',
       },
       picker: {
+        width: 150,
         height: 50,
-        width: 240,
-        color: "#FFFFFF",
+        color: '#FFFFFF',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 2,
+        borderRadius: 20,
+        borderColor: '#89c7ff',
+        marginBottom: 10,
+        marginLeft: 5,
       },
-      pickerBorder: {
-        borderColor: "#0AE2FF",
-        borderWidth: 3,
-        borderRadius: 10,
-        backgroundColor: "#2c2c2c",
-      },
+
       pickerItem: {
+        color: "#2c2c2c",
+        backgroundColor:'#2c2c2c',
+      },
+      sortText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        padding: 10,
+        borderWidth: 2, // add a border
+        borderColor: '#89c7ff', // set the border color
+        borderRadius: 10, // add rounded corners
+        marginBottom: 10 // add spacing
+      },
+      sortTextView: {
+        flexDirection: 'row'
+      },
+      sortLabel: {
         color: "#FFFFFF",
+        flex: 1,
+        marginRight: 2,
+      },
+      sortValue: {
+        flex: 1,
+        marginLeft: 2,
+        textAlign: 'left'
       },
 });

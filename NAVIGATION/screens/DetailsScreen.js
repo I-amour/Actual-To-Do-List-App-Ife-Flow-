@@ -1,7 +1,7 @@
 
 import * as React from 'react';
 import {useState} from 'react';
-import {View, Text, TextInput, TouchableOpacity, Modal} from 'react-native';
+import {View, Text, TextInput, TouchableOpacity,TouchableWithoutFeedback, Modal} from 'react-native';
 import {Calendar} from 'react-native-calendars';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -16,6 +16,7 @@ if (Platform.OS === 'android') {
     console.log('Permission granted');
   });
 }
+
 
     
 
@@ -40,7 +41,7 @@ export default function DetailsScreen({navigation}) {
         updatedReminders[day.dateString] = {
           ...updatedReminders[day.dateString],
           selected: true,
-          selectedColor: 'green',
+          selectedColor: '#39ff14',
         };
         return updatedReminders;
       });
@@ -129,36 +130,58 @@ export default function DetailsScreen({navigation}) {
       const [pressedIndex, setPressedIndex] = useState(null);
 
     return (
-        <View style={{flex: 1}}>
-            <Calendar
-                onDayPress={onDayPress}
-                markedDates={reminders}
-            />
-            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+<View style={{flex: 1, backgroundColor: '#2c2c2c'}}>
+  <View style={{ backgroundColor: '#2c2c2c', padding: 20}}>
+    <Calendar
+      onDayPress={onDayPress}
+      markedDates={reminders}
+      theme={{
+        backgroundColor: '#2c2c2c',
+        calendarBackground: '#2c2c2c',
+        textSectionTitleColor: '#fff',
+        selectedDayBackgroundColor: '#dcd6f7',
+        selectedDayTextColor: '#333',
+        todayTextColor: '#00adf5',
+        dayTextColor: '#fff',
+        textDisabledColor: '#666',
+        dotColor: '#dcd6f7',
+        selectedDotColor: '#333',
+        arrowColor: '#fff',
+        monthTextColor: '#fff',
+        indicatorColor: '#fff',
+        textDayFontSize: 16,
+        textMonthFontSize: 20,
+        textDayHeaderFontSize: 16
+      }}
+    />
+  </View>
+
+            <View style={{ alignItems: 'center', justifyContent: 'center'}}>
   <Modal animationType="slide" transparent={true} visible={showReminderForm}>
     <View style={{ flex: 1 }}>
-      <TouchableOpacity
-        style={{
-          flex: 1,
-          backgroundColor: 'rgba(0,0,0,.5)',
-        }}
-        onPress={() => setShowReminderForm(false)}
-      />
-      <View
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: [{ translateX: -100 }, { translateY: -100 }],
-          backgroundColor: '#f7d6e0',
-          paddingVertical: 20,
-          paddingHorizontal: 40,
-          borderRadius: 20,
-        }}
-      >
-        <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom :10 }}>Add Reminder</Text>
+    <TouchableWithoutFeedback onPress={() => setShowReminderForm(false)}>
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,.4)',
+          }}
+        />
+      </TouchableWithoutFeedback>
+<View
+  style={{
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -120 }, { translateY: -120 }],
+    backgroundColor: '#141414',
+    paddingVertical: 40,
+    paddingHorizontal: 60,
+    borderRadius: 20,
+  }}
+>
+        <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom :10, color: '#89c7ff' }}>Add Reminder</Text>
         <TouchableOpacity onPress={showTimepicker}>
-    <Text style={{ color:'#4a47a3', fontWeight:'bold' }}>
+    <Text style={{ color:'#39ff14' }}>
       {reminderTime || 'Select Time'}
     </Text>
   </TouchableOpacity>
@@ -188,7 +211,7 @@ export default function DetailsScreen({navigation}) {
          <TouchableOpacity 
              onPress={onReminderSet} 
              style={{
-                 backgroundColor:'#4a47a3',
+                 backgroundColor:'#89c7ff',
                  paddingVertical :10,
                  paddingHorizontal :20,
                  borderRadius :4}}>
@@ -200,8 +223,8 @@ export default function DetailsScreen({navigation}) {
                 <>
                    <TouchableOpacity
   style={{
-    marginTop: 10,
-    backgroundColor: '#add8e6',
+    marginTop: 20,
+    backgroundColor: '#89c7ff',
     padding: 10,
     borderRadius: 5,
   }}
@@ -218,19 +241,20 @@ export default function DetailsScreen({navigation}) {
     <View
       key={index}
       style={{
+        marginTop:20,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#f7d6e0',
+        backgroundColor: '#141414',
         paddingVertical :10,
         paddingHorizontal :20,
         borderRadius :4,
         marginBottom :8
       }}
     >
-      <View>
-          <Text style={{ fontWeight:'bold' }}>{reminder.time}</Text>
-          <Text>{reminder.description}</Text>
+      <View style={{marginTop: 10, marginBottom:10}}>
+          <Text style={{ fontWeight:'bold', color: '#89c7ff' }}>{reminder.time}</Text>
+          <Text style={{color:'#89c7ff'}}>{reminder.description}</Text>
       </View>
       <TouchableOpacity 
          onPressIn={() => setPressedIndex(index)}

@@ -1,28 +1,31 @@
 {
   "expo": {
-    "name": "TodoList",
+    "name": "Ife Flow",
     "slug": "to-do-list",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/KJHNE8jf.jpeg",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/KJHNE8jf.jpeg",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
     "ios": {
-      "supportsTablet": true
-    },
+      "supportsTablet": true,
+      "infoPlist": {
+        "UIRequiresFullScreen": true
+      }
+    }, 
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/KJHNE8jf.jpeg",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.ifelove.todolist"
+      "package": "com.ifelove.todolist",
+      "androidStatusBar": {
+        "backgroundColor": "#ffffff"
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
